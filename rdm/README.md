@@ -7,18 +7,27 @@ dependencies with) other `rise` components like training or inference, which
 live in their own top-level folders.
 
 `rdm/` standardizes raw ground-truth data (field geometries + attributes) into
-a harmonized format, then runs a set of QA checks on the result. A separate,
-in-progress piece of code (not in this repo yet) pushes the standardized
-output into the `ukrop` database/dashboard on Azure.
+the shape `ukrop` (a separate repo — Django + PostGIS, ingesting from Azure
+Blob Storage) requires. A separate, in-progress piece of code (not in this
+repo yet) actually pushes the standardized output there.
 
-Two notebooks, run in order:
+**`notebooks/preprocess_data.ipynb` is the only notebook you need to get to
+ukrop-ready data.** It merges a raw geometry file (+ optional attribute file)
+into one standardized table (crop type, sow date, `Season_id`, `Geom_id`,
+etc.) and exports it (e.g. `data/check_file.geojson`).
 
-1. **`notebooks/preprocess_data.ipynb`** — merges a raw geometry file (+
-   optional attribute file) into one standardized table (crop type, sow date,
-   `Season_id`, `Geom_id`, etc.) and exports it (e.g. `data/check_file.geojson`).
-2. **`notebooks/qa_checks.ipynb`** — takes that standardized output and runs
-   geometry, land-cover, road-proximity, and overlap QA checks on it before you
-   trust the data enough to hand it off.
+Two more notebooks exist as **optional, orthogonal follow-up checks** — run
+either, both, or neither depending on what you want to verify:
+
+- **`notebooks/qa_checks.ipynb`** — general geometric/data-quality QA
+  (geometry validity, land-cover sanity, road proximity, overlapping
+  boundaries). This is about whether the *data itself* looks right — it has
+  nothing to do with whether the file matches ukrop's schema.
+- **`notebooks/validate_ukrop_format.ipynb`** — checks the standardized
+  output against ukrop's actual ingestion contract specifically (required
+  fields, enum values, the single-date-per-operation rule, etc. — see the
+  schema reference below). This is the one to run if the question is
+  "will ukrop accept this file."
 
 All paths in this document are relative to this `rdm/` folder.
 
@@ -37,8 +46,10 @@ it's the one both notebooks in this folder use.)
 ## Repo structure
 
 - `notebooks/`
-  - `preprocess_data.ipynb` — the standardization pipeline.
-  - `qa_checks.ipynb` — QA checks.
+  - `preprocess_data.ipynb` — the standardization pipeline (the only
+    required step).
+  - `qa_checks.ipynb` — optional general data-quality QA.
+  - `validate_ukrop_format.ipynb` — optional ukrop-schema-compliance check.
 - `src/rdm/` — shared logic imported by the notebooks (add `src/` to
   `sys.path` before importing, as the notebooks already do):
   - `read_data.py` — reads/merges a raw geometry file with an optional
@@ -50,6 +61,7 @@ it's the one both notebooks in this folder use.)
   - `geom_processing.py` — geometry validity/repair/duplicate checks.
   - `observation_processing.py` — datetime/yield standardization,
     start/end-date collapsing, `Season_id` assignment.
+  - `validate_ukrop.py` — the checks behind `validate_ukrop_format.ipynb`.
   - `utils.py` — shared lookup tables (crop groups, season codes, target
     schema).
 - `data/` — sample/working inputs and outputs (not meant to be exhaustive —
@@ -120,3 +132,47 @@ and road-proximity sections use `Src_id`, so it must have been mapped when
   just close the window to let the notebook continue — but it will block
   indefinitely if this notebook is ever run headless/non-interactively (e.g.
   via `nbconvert --execute` or a script), since there's no window to close.
+
+## `notebooks/validate_ukrop_format.ipynb`
+
+Checks a standardized output file against ukrop's actual ingestion contract
+(not general data quality — that's `qa_checks.ipynb`). Answers "will ukrop
+accept this file," not "is this good data."
+
+- **Required:** `Season_id` present and non-null on every row (ukrop silently
+  drops any row missing it).
+- **Expected but not enforced:** `Geom_id`, `Src_id`, `Est_Sow_Year` — ukrop
+  won't reject a file missing these, but the corresponding DB fields will
+  just be null.
+- **Single-date rule:** flags any `_Start_Date`/`_End_Date`-suffixed column
+  still present alongside its plain-named counterpart (`Sow_Date`,
+  `Harvest_Date`, `Tillage_Date`) — a sign the start/end collapsing step
+  (Section 4a of `preprocess_data.ipynb`) hasn't been run yet.
+- **Enum checks:** `Crop_Season` values outside `Winter`/`Spring`/`Summer`/
+  `Fall`, and (if present) chemical `operation_type` values outside ukrop's
+  fixed list, both get silently NULLed by ukrop rather than rejected — this
+  notebook flags them instead of letting them through quietly.
+- **Casing:** flags `Src_Id` (wrong casing) if present instead of `Src_id`.
+- **Informational only:** notes `Src_File`, `Variety`, `Yield_Clean`, and
+  `Urea_Date` if present, since ukrop doesn't read any of them (not an error
+  — just a heads-up that data there is going nowhere).
+- **Does not validate:** provider-folder naming/placement, since that's a
+  property of where the file gets delivered, not of the file itself — see
+  the schema reference below for the provider-name rule.
+
+## ukrop schema quick reference
+
+The full contract (with exact source citations) lives in `CLAUDE.md` — this
+is the short version, current as of when this pipeline was last checked
+against ukrop's actual code (`ingest_processed_data.py`, `models.py`).
+
+| | |
+|---|---|
+| Provider folder name | Becomes `Provider.name` verbatim. Known providers: `FRENDT, IMC, KERNEL, KUSSUL, NIBULON, ZELENA_DOLYNA`. |
+| Required per row | `Season_id` (rows without it are dropped) |
+| Per-operation date columns | Exactly one plain-named column per operation: `Sow_Date`, `Harvest_Date`, `Tillage_Date`. No end-date field exists in ukrop's schema at all — pick one value (convention here: the end date) before delivery. |
+| `Crop_Season` allowed values | `Winter`, `Spring`, `Summer`, `Fall` (else silently `NULL`) |
+| Chemical `operation_type` allowed values | `Fertilizer`, `Pesticide`, `Herbicide`, `Fungicide`, `Insecticide`, `"CP product (Herbicide)"`, `"CP product (Fungicide)"`, `"CP product (Insecticide)"`, `Other` (else silently `NULL`) |
+| Fields ukrop does not model | `Src_File`, `Variety` (only `Crop_Variation` exists), `Yield_Clean`, `Urea_Date` |
+| CSV filename → operation type | Substring match: `_sow`, `_harv`, `_till`, `_spread`/`_input`/`_protect`, `_crops` |
+| Year | Derived from the immediate parent folder name via `str.isdigit()` — non-numeric folders silently get `year=None` |

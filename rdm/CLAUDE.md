@@ -248,6 +248,15 @@ reimplementing event-grouping in this repo.
 
 # Known gaps in this pipeline vs. what ukrop needs (not yet built)
 
+- **Partially addressed:** `notebooks/validate_ukrop_format.ipynb` /
+  `src/rdm/validate_ukrop.py` now check a standardized file against the
+  contract above (`Season_id` presence, the single-date rule, `Crop_Season`
+  and chemical `operation_type` enum values, `Src_id` casing). It's a
+  compliance check on one file, not a folder-layout/delivery check, and its
+  enum checks only recognize specific column names seen so far
+  (`operation_type`/`Protect_Type`/`Input_Type`) — a new provider using a
+  different raw column name for the same concept would silently skip that
+  check rather than error.
 - No step that writes a standardized output into ukrop's expected Azure Blob
   folder/file layout, or otherwise talks to ukrop directly.
 - No Tillage / Protection (Chemical) / Inputs / Soil-Env categories in the
