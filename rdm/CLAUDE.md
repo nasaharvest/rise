@@ -248,9 +248,10 @@ reimplementing event-grouping in this repo.
 
 # Known gaps in this pipeline vs. what ukrop needs (not yet built)
 
-- **Partially addressed:** `notebooks/validate_ukrop_format.ipynb` /
-  `src/rdm/validate_ukrop.py` now check a standardized file against the
-  contract above (`Season_id` presence, the single-date rule, `Crop_Season`
+- **Partially addressed:** `src/rdm/validate_ukrop.py`, run as Section 9 of
+  `preprocess_data.ipynb` (also importable standalone), now checks a
+  standardized file against the contract above (`Season_id` presence, the
+  single-date rule, `Crop_Season`
   and chemical `operation_type` enum values, `Src_id` casing). It's a
   compliance check on one file, not a folder-layout/delivery check, and its
   enum checks only recognize specific column names seen so far

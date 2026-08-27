@@ -14,20 +14,18 @@ repo yet) actually pushes the standardized output there.
 **`notebooks/preprocess_data.ipynb` is the only notebook you need to get to
 ukrop-ready data.** It merges a raw geometry file (+ optional attribute file)
 into one standardized table (crop type, sow date, `Season_id`, `Geom_id`,
-etc.) and exports it (e.g. `data/check_file.geojson`).
+etc.), exports it (e.g. `data/check_file.geojson`), and finishes by checking
+that export against ukrop's actual ingestion contract (required fields, enum
+values, the single-date-per-operation rule — see the schema reference below),
+printing a pass/fail report so you know before you hand the file off.
 
-Two more notebooks exist as **optional, orthogonal follow-up checks** — run
-either, both, or neither depending on what you want to verify:
+One more notebook exists as an **optional, orthogonal follow-up check**:
 
 - **`notebooks/qa_checks.ipynb`** — general geometric/data-quality QA
   (geometry validity, land-cover sanity, road proximity, overlapping
   boundaries). This is about whether the *data itself* looks right — it has
-  nothing to do with whether the file matches ukrop's schema.
-- **`notebooks/validate_ukrop_format.ipynb`** — checks the standardized
-  output against ukrop's actual ingestion contract specifically (required
-  fields, enum values, the single-date-per-operation rule, etc. — see the
-  schema reference below). This is the one to run if the question is
-  "will ukrop accept this file."
+  nothing to do with whether the file matches ukrop's schema, and isn't
+  required to get ukrop-ready data.
 
 All paths in this document are relative to this `rdm/` folder.
 
@@ -47,9 +45,8 @@ it's the one both notebooks in this folder use.)
 
 - `notebooks/`
   - `preprocess_data.ipynb` — the standardization pipeline (the only
-    required step).
+    required step; ends with an ukrop-format compliance check).
   - `qa_checks.ipynb` — optional general data-quality QA.
-  - `validate_ukrop_format.ipynb` — optional ukrop-schema-compliance check.
 - `src/rdm/` — shared logic imported by the notebooks (add `src/` to
   `sys.path` before importing, as the notebooks already do):
   - `read_data.py` — reads/merges a raw geometry file with an optional
@@ -61,7 +58,9 @@ it's the one both notebooks in this folder use.)
   - `geom_processing.py` — geometry validity/repair/duplicate checks.
   - `observation_processing.py` — datetime/yield standardization,
     start/end-date collapsing, `Season_id` assignment.
-  - `validate_ukrop.py` — the checks behind `validate_ukrop_format.ipynb`.
+  - `validate_ukrop.py` — the ukrop-format compliance checks, run as the
+    final step of `preprocess_data.ipynb` (also importable standalone to
+    re-check a file without rerunning the whole pipeline).
   - `utils.py` — shared lookup tables (crop groups, season codes, target
     schema).
 - `data/` — sample/working inputs and outputs (not meant to be exhaustive —
@@ -91,6 +90,13 @@ either way.
 
 **Output:** a standardized geometry file with one row per field per season,
 ready for the QA notebook or for ingestion into the database pipeline.
+
+**Section 9 (final step) validates the export against ukrop's ingestion
+contract** and prints a pass/fail report — see "ukrop schema quick reference"
+below for what it checks. This answers "will ukrop accept this file," not
+"is this good data" (that's what `qa_checks.ipynb` is for). The check itself
+lives in `src/rdm/validate_ukrop.py`, importable standalone if you want to
+re-check an existing file without rerunning the whole pipeline.
 
 ## `notebooks/qa_checks.ipynb`
 
@@ -133,11 +139,7 @@ and road-proximity sections use `Src_id`, so it must have been mapped when
   indefinitely if this notebook is ever run headless/non-interactively (e.g.
   via `nbconvert --execute` or a script), since there's no window to close.
 
-## `notebooks/validate_ukrop_format.ipynb`
-
-Checks a standardized output file against ukrop's actual ingestion contract
-(not general data quality — that's `qa_checks.ipynb`). Answers "will ukrop
-accept this file," not "is this good data."
+## What the ukrop-format check (Section 9) covers
 
 - **Required:** `Season_id` present and non-null on every row (ukrop silently
   drops any row missing it).
@@ -147,11 +149,11 @@ accept this file," not "is this good data."
 - **Single-date rule:** flags any `_Start_Date`/`_End_Date`-suffixed column
   still present alongside its plain-named counterpart (`Sow_Date`,
   `Harvest_Date`, `Tillage_Date`) — a sign the start/end collapsing step
-  (Section 4a of `preprocess_data.ipynb`) hasn't been run yet.
+  (Section 4a) hasn't been run yet.
 - **Enum checks:** `Crop_Season` values outside `Winter`/`Spring`/`Summer`/
   `Fall`, and (if present) chemical `operation_type` values outside ukrop's
   fixed list, both get silently NULLed by ukrop rather than rejected — this
-  notebook flags them instead of letting them through quietly.
+  check flags them instead of letting them through quietly.
 - **Casing:** flags `Src_Id` (wrong casing) if present instead of `Src_id`.
 - **Informational only:** notes `Src_File`, `Variety`, `Yield_Clean`, and
   `Urea_Date` if present, since ukrop doesn't read any of them (not an error
