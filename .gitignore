@@ -5,6 +5,15 @@
 data/
 cache/
 
+# Except: synthetic practice datasets under rdm/data/sample_data/ (not real
+# provider data, safe to share). Everything else under rdm/data/ stays ignored
+# (un-ignoring a directory that's inside an ignored "data/" match requires
+# explicitly re-ignoring its other contents, or they'd all become visible).
+!rdm/data/
+rdm/data/*
+!rdm/data/sample_data/
+!rdm/data/sample_data/**
+
 # Ignore system/python junk
 __pycache__/
 *.pyc
