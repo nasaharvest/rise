@@ -1,10 +1,15 @@
 ## Overview
 
-This is the ground-truth reference-data (RDM) preprocessing part of the `rise`
-pipeline. It standardizes raw ground-truth data (field geometries + attributes)
-into a harmonized format, then runs a set of QA checks on the result. A
-separate, in-progress piece of code (not in this repo yet) pushes the
-standardized output into the `ukrop` database/dashboard on Azure.
+This is the `rdm/` (ground-truth reference-data management) component of the
+`rise` pipeline — one self-contained piece of a larger monorepo, with its own
+environment, notebooks, and code. It's unrelated to (and doesn't share
+dependencies with) other `rise` components like training or inference, which
+live in their own top-level folders.
+
+`rdm/` standardizes raw ground-truth data (field geometries + attributes) into
+a harmonized format, then runs a set of QA checks on the result. A separate,
+in-progress piece of code (not in this repo yet) pushes the standardized
+output into the `ukrop` database/dashboard on Azure.
 
 Two notebooks, run in order:
 
@@ -15,7 +20,11 @@ Two notebooks, run in order:
    geometry, land-cover, road-proximity, and overlap QA checks on it before you
    trust the data enough to hand it off.
 
+All paths in this document are relative to this `rdm/` folder.
+
 ## Environment Setup
+
+From inside `rdm/`:
 
 ```bash
 conda env create -f environment.yml
@@ -23,7 +32,7 @@ conda activate fresh_test
 ```
 
 (The environment is named `fresh_test` in `environment.yml` — despite the name,
-it's the one both notebooks in this repo use.)
+it's the one both notebooks in this folder use.)
 
 ## Repo structure
 

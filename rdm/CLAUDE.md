@@ -1,21 +1,26 @@
 # Purpose
 
-This is the ground-truth reference-data (`src/rdm/` + `notebooks/`) part of
-the `rise` pipeline (`nasaharvest/rise`). It turns raw per-provider
-ground-truth field data (geometries + crop/sow/harvest/tillage/protection
-attributes) into the standardized shape required for ingestion into
-**`ukrop`** (a separate repo: Django + PostGIS, ingestion reads from Azure
-Blob Storage — see `ukrop/ukrop/models.py` and
+This is the `rdm/` (ground-truth reference-data management) component of the
+`rise` pipeline (`nasaharvest/rise`), self-contained under this folder with
+its own environment, notebooks, and code — unrelated to sibling `rise`
+components (e.g. training, inference) that live in their own top-level
+folders with their own conventions. Everything in this file is scoped to
+`rdm/` only. All paths below are relative to this folder.
+
+`rdm/` turns raw per-provider ground-truth field data (geometries +
+crop/sow/harvest/tillage/protection attributes) into the standardized shape
+required for ingestion into **`ukrop`** (a separate repo: Django + PostGIS,
+ingestion reads from Azure Blob Storage — see `ukrop/ukrop/models.py` and
 `ukrop/.../ingest_processed_data.py`). **`ukrop` is the real target system.**
 A different local `.gpkg`/SQLite database used in the `GROUND DATA PREPROCESS`
-repo (this repo's predecessor, kept around for historical reference — new work
-happens here in `rise`) is a separate, legacy setup — don't confuse the two,
-and don't assume anything written for one applies to the other.
+repo (this component's predecessor, kept around for historical reference — new
+work happens here in `rise`) is a separate, legacy setup — don't confuse the
+two, and don't assume anything written for one applies to the other.
 
 Pipeline today: `notebooks/preprocess_data.ipynb` (raw → standardized
 geojson/parquet) → `notebooks/qa_checks.ipynb` (QA on that output). **Nothing
-in this repo yet writes into ukrop's expected folder/file layout or talks to
-it directly** — that step is separate, in-progress work, not part of this
+in `rdm/` yet writes into ukrop's expected folder/file layout or talks to it
+directly** — that step is separate, in-progress work, not part of this
 codebase yet. Don't assume a "standardized" file from this pipeline is
 ukrop-ready without checking it against the contract below first.
 
