@@ -242,42 +242,55 @@ class display_final_cols:
         """Internal callback when button is clicked."""
         with self.output_area:
             clear_output()
-            self.final_mapping = {}
-            assigned_cols = set()
-            
-            # Harvest values from dropdowns
-            for field, widget in self.mapping_widgets.items():
-                if widget.value != '(None)':
-                    self.final_mapping[field] = widget.value
-                    assigned_cols.add(widget.value)
-            
-            # Check for unmapped columns
-            all_cols = set(self.df.columns)
-            unmapped = list(all_cols - assigned_cols)
-            unmapped.sort()
-            
-            print(f"Successfully Mapped: {len(self.final_mapping)} columns.")
-            
-            if unmapped:
-                print("\n" + "="*40)
-                print(f"UNMAPPED COLUMNS ({len(unmapped)})")
-                print("The following columns from your file were NOT assigned:")
-                print("="*40)
-                
-                # Use pprint here for clean output
-                pp = pprint.PrettyPrinter(indent=4, width=80, compact=True)
-                pp.pprint(unmapped)
-            else:
-                print("\nAll columns in the file have been mapped.")
-                
-            for field, widget in self.mapping_widgets.items():
-                selected_col = widget.value
-                if selected_col != '(None)':
-                    expected_dtype = self._get_field_dtype(field)
-                    actual_dtype = self.df[selected_col].dtype
+            self._apply_mapping()
 
-                    if not self._check_dtype(actual_dtype, expected_dtype):
-                        print(f"⚠ Warning: '{selected_col}' does not match expected type '{expected_dtype}'")
+    def confirm(self):
+        """Apply the current dropdown mapping without requiring a UI click.
+
+        Use this in headless contexts (scripts, nbconvert, tests) where there is
+        no live widget frontend to click "Confirm Mapping" in. Uses whatever
+        values are currently set on the dropdowns (auto-matched defaults unless
+        changed).
+        """
+        self._apply_mapping()
+
+    def _apply_mapping(self):
+        self.final_mapping = {}
+        assigned_cols = set()
+
+        # Harvest values from dropdowns
+        for field, widget in self.mapping_widgets.items():
+            if widget.value != '(None)':
+                self.final_mapping[field] = widget.value
+                assigned_cols.add(widget.value)
+
+        # Check for unmapped columns
+        all_cols = set(self.df.columns)
+        unmapped = list(all_cols - assigned_cols)
+        unmapped.sort()
+
+        print(f"Successfully Mapped: {len(self.final_mapping)} columns.")
+
+        if unmapped:
+            print("\n" + "="*40)
+            print(f"UNMAPPED COLUMNS ({len(unmapped)})")
+            print("The following columns from your file were NOT assigned:")
+            print("="*40)
+
+            # Use pprint here for clean output
+            pp = pprint.PrettyPrinter(indent=4, width=80, compact=True)
+            pp.pprint(unmapped)
+        else:
+            print("\nAll columns in the file have been mapped.")
+
+        for field, widget in self.mapping_widgets.items():
+            selected_col = widget.value
+            if selected_col != '(None)':
+                expected_dtype = self._get_field_dtype(field)
+                actual_dtype = self.df[selected_col].dtype
+
+                if not self._check_dtype(actual_dtype, expected_dtype):
+                    print(f"⚠ Warning: '{selected_col}' does not match expected type '{expected_dtype}'")
     
     def _get_field_dtype(self, field_name):
         for category in self.schema.values():

@@ -26,7 +26,11 @@ def check_invalid_geoms(gdf:gpd.GeoDataFrame):
 
     invalid_geoms = gdf[~gdf.geometry.notnull()]
     valid_geoms = gdf[gdf.geometry.notnull()].copy().reset_index(drop=True)
- 
+    
+    if invalid_geoms.empty:
+        print("No invalid geoms")
+    else:
+        print("The invalid geoms are: ",invalid_geoms)
     return invalid_geoms,valid_geoms
 
 def check_repeating_geoms(gdf:gpd.GeoDataFrame):

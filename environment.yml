@@ -16,6 +16,11 @@ dependencies:
   - openpyxl
   - ipykernel
   - ipywidgets
+  - osmnx
+  - rasterio
+  - rasterstats
+  - planetary-computer
+  - pystac-client
   - pip
   - pip:
       - s2cell
