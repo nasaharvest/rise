@@ -1,9 +1,6 @@
 import pandas as pd
 import re
-#from utils import crop_variations,crop_codes
-import sys
-sys.path.append('..')
-import utils
+from rdm import utils
 
 #Mapping the crop types to the variations from the crop_variations dictionary 
 #Trying to make it replicabele for other dictionaries, this might move to a different file based on how much it is used outside of crop type operations

@@ -1,22 +1,26 @@
 ## Overview
 
-This repo standardizes raw ground-truth data (field geometries + attributes) into a
-harmonized format, then runs a set of QA checks on the result. It's the first stage
-of a larger satellite-processing pipeline — a separate repo handles pushing the
-standardized output into the Azure database/dashboard.
+This is the ground-truth reference-data (RDM) preprocessing part of the `rise`
+pipeline. It standardizes raw ground-truth data (field geometries + attributes)
+into a harmonized format, then runs a set of QA checks on the result. A
+separate, in-progress piece of code (not in this repo yet) pushes the
+standardized output into the `ukrop` database/dashboard on Azure.
 
 Two notebooks, run in order:
 
-1. **`preprocessing_notebook.ipynb`** — merges a raw geometry file (+ optional
-   attribute file) into one standardized table (crop type, sow date, `Season_id`,
-   `Geom_id`, etc.) and exports it (e.g. `data/check_file.geojson`).
-2. **`geometric_checks.ipynb`** — takes that standardized output and runs geometry,
-   land-cover, road-proximity, and overlap QA checks on it before you trust the data
-   enough to hand it off.
+1. **`notebooks/preprocess_data.ipynb`** — merges a raw geometry file (+
+   optional attribute file) into one standardized table (crop type, sow date,
+   `Season_id`, `Geom_id`, etc.) and exports it (e.g. `data/check_file.geojson`).
+2. **`notebooks/qa_checks.ipynb`** — takes that standardized output and runs
+   geometry, land-cover, road-proximity, and overlap QA checks on it before you
+   trust the data enough to hand it off.
 
-`geometric_checks_halo.ipynb` is a variant of the same QA notebook pointed at a
-different input (HALO's Ukraine minefield survey polygons instead of
-`check_file.geojson`) — same checks, different source data.
+`notebooks/qa_checks_halo.ipynb` is a variant of the same QA notebook pointed
+at a different input (HALO's Ukraine minefield survey polygons instead of
+`check_file.geojson`) — same checks, different source data. It predates the
+bug fixes made to `qa_checks.ipynb` (missing `shapely` import, undefined
+`utm_crs`/`road_union`, fragile raw-Overpass road fetch) and hasn't had them
+backported yet.
 
 ## Environment Setup
 
@@ -30,23 +34,29 @@ it's the one both notebooks in this repo use.)
 
 ## Repo structure
 
-- `preprocessing_notebook.ipynb` / `preprocessing_notebook_zel.ipynb` — the
-  standardization pipeline (the `_zel` variant is an earlier run against the
-  Zelena Dolyna dataset).
-- `geometric_checks.ipynb` / `geometric_checks_halo.ipynb` — QA checks.
-- `scripts/` — shared logic imported by the notebooks:
-  - `automation.py` — reads/merges raw files, assigns sow info & `Est_Sow_Year`,
-    and the interactive column-mapping UI (`display_final_cols`) used to produce
-    the final standardized schema.
+- `notebooks/`
+  - `preprocess_data.ipynb` — the standardization pipeline.
+  - `qa_checks.ipynb` / `qa_checks_halo.ipynb` — QA checks.
+- `src/rdm/` — shared logic imported by the notebooks (add `src/` to
+  `sys.path` before importing, as the notebooks already do):
+  - `read_data.py` — reads/merges a raw geometry file with an optional
+    separate attribute file (`read_ground_data`).
+  - `standardize.py` — crop-type preprocessing, sow-info/`Est_Sow_Year`
+    assignment, and the interactive column-mapping UI (`display_final_cols`)
+    used to produce the final standardized schema.
   - `crop_type.py` — crop name parsing/coding.
   - `geom_processing.py` — geometry validity/repair/duplicate checks.
-  - `observation_processing.py` — datetime/yield standardization, `Season_id`
-    assignment.
-- `utils.py` — shared lookup tables (crop groups, season codes, target schema).
+  - `observation_processing.py` — datetime/yield standardization,
+    start/end-date collapsing, `Season_id` assignment.
+  - `utils.py` — shared lookup tables (crop groups, season codes, target
+    schema).
 - `data/` — sample/working inputs and outputs (not meant to be exhaustive —
-  point the notebooks at your own raw files via the `USER INPUT SECTION` cell).
+  point the notebooks at your own raw files via the `USER INPUT SECTION`
+  cell). Gitignored except `data/sample_data/`, which holds synthetic
+  practice datasets safe to share (see the notebook's default
+  `USER INPUT SECTION` for how to switch between them).
 
-## `preprocessing_notebook.ipynb`
+## `notebooks/preprocess_data.ipynb`
 
 **Expected inputs:** a geometry file (`.shp`, `.geojson`, or `.parquet`) and,
 optionally, a separate attribute file (`.xlsx`/`.csv`) joined on a shared key —
@@ -68,7 +78,7 @@ either way.
 **Output:** a standardized geometry file with one row per field per season,
 ready for the QA notebook or for ingestion into the database pipeline.
 
-## `geometric_checks.ipynb`
+## `notebooks/qa_checks.ipynb`
 
 Runs a suite of checks on the standardized output before it's considered ready
 to ship:

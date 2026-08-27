@@ -1,20 +1,23 @@
 # Purpose
 
-This repo turns raw per-provider ground-truth field data (geometries + crop/sow/
-harvest/tillage/protection attributes) into the standardized shape required for
-ingestion into **`ukrop`** (a separate repo: Django + PostGIS, ingestion reads
-from Azure Blob Storage — see `ukrop/ukrop/models.py` and
+This is the ground-truth reference-data (`src/rdm/` + `notebooks/`) part of
+the `rise` pipeline (`nasaharvest/rise`). It turns raw per-provider
+ground-truth field data (geometries + crop/sow/harvest/tillage/protection
+attributes) into the standardized shape required for ingestion into
+**`ukrop`** (a separate repo: Django + PostGIS, ingestion reads from Azure
+Blob Storage — see `ukrop/ukrop/models.py` and
 `ukrop/.../ingest_processed_data.py`). **`ukrop` is the real target system.**
 A different local `.gpkg`/SQLite database used in the `GROUND DATA PREPROCESS`
-repo is a separate, legacy setup — don't confuse the two, and don't assume
-anything written for one applies to the other.
+repo (this repo's predecessor, kept around for historical reference — new work
+happens here in `rise`) is a separate, legacy setup — don't confuse the two,
+and don't assume anything written for one applies to the other.
 
-Pipeline today: `preprocessing_notebook.ipynb` (raw → standardized
-geojson/parquet) → `geometric_checks.ipynb` (QA on that output). **Nothing in
-this repo yet writes into ukrop's expected folder/file layout or talks to it
-directly** — that step doesn't exist yet. Don't assume a "standardized" file
-from this pipeline is ukrop-ready without checking it against the contract
-below first.
+Pipeline today: `notebooks/preprocess_data.ipynb` (raw → standardized
+geojson/parquet) → `notebooks/qa_checks.ipynb` (QA on that output). **Nothing
+in this repo yet writes into ukrop's expected folder/file layout or talks to
+it directly** — that step is separate, in-progress work, not part of this
+codebase yet. Don't assume a "standardized" file from this pipeline is
+ukrop-ready without checking it against the contract below first.
 
 # The ukrop ingestion contract
 
@@ -99,7 +102,7 @@ sow_rate, sow_amount)`, Crop on `(season, name, crop_group,
 crop_variation)`) — don't assume re-running ingestion on the same file is
 always a no-op if any of those tuple fields differ between runs.
 
-# This pipeline's own conventions (`utils.py`, `preprocessing_notebook.ipynb`)
+# This pipeline's own conventions (`src/rdm/utils.py`, `notebooks/preprocess_data.ipynb`)
 
 - `Season_id` = `{Geom_id}-{date or "_EST"}` — unique per field per season.
   `Geom_id` (an s2cell-derived geometry hash) repeats across seasons for the
@@ -111,7 +114,7 @@ always a no-op if any of those tuple fields differ between runs.
   up in some read-side query code and in `utils.py`'s schema dict in the
   sibling `GROUND DATA PREPROCESS` repo) — if you see `Src_Id` anywhere,
   treat it as the same field, and don't introduce more of that casing.
-- The interactive `display_final_cols` widget (`scripts/automation.py`) needs
+- The interactive `display_final_cols` widget (`src/rdm/standardize.py`) needs
   either a live-Jupyter click on "Confirm Mapping", or `.confirm()` for
   headless runs. `.confirm()` only auto-matches **exact** (case-insensitive)
   column-name equality — it will silently leave a column unmapped if the raw
@@ -119,7 +122,7 @@ always a no-op if any of those tuple fields differ between runs.
   become `Src_id`). Always check the printed "Successfully Mapped" /
   "UNMAPPED COLUMNS" output rather than assuming a headless run mapped
   everything a human would have.
-- `utils.py`'s `target_schema_grouped_temp` — the schema actually driving the
+- `src/rdm/utils.py`'s `target_schema_grouped_temp` — the schema actually driving the
   mapping widget — currently only defines `Essential`, `Crop`, `Sowing`
   (`Sow_Date`/`Sow_Day`/`Sow_Month`), and `Harvest` (`Harvest_Date`/`Yield`)
   categories. **There is no Tillage, Protection/Chemical, Inputs, or
@@ -146,7 +149,7 @@ text respectively, from two different raw formats) independently converged on th
 same practical approach. Worth reusing this instead of re-deriving it once Tillage
 support gets added to this pipeline's schema:
 
-**Canonical `Tillage_Type` values in use** (not yet formalized in `utils.py` —
+**Canonical `Tillage_Type` values in use** (not yet formalized in `src/rdm/utils.py` —
 there is no Tillage category in `target_schema_grouped_temp` at all yet):
 `Disking`, `Deep_Loosening`, `Deep_Ripping`, `Cultivation`, `Inter-Row_Cultivation`,
 `Harrowing`, `Plowing`, `Rolling`, `Soil_Amelioration`, `Other` (fallback for
@@ -214,13 +217,13 @@ reimplementing event-grouping in this repo.
 - A provider name that doesn't already exist in ukrop's known list, or that
   could plausibly fold into an existing one (e.g. is `Kernel_EBRD` its own
   provider, or part of `KERNEL`?).
-- A raw crop name/synonym not already present in `utils.py`'s
+- A raw crop name/synonym not already present in `src/rdm/utils.py`'s
   `crop_variations` dict.
 - A raw column that doesn't cleanly auto-match a target schema field by name
   during mapping.
 - Non-numeric or otherwise irregular year folder naming in raw data.
 - A raw file shape you haven't seen before (operation-log vs. one-file-per-type).
-- Whether a QA flag from `geometric_checks.ipynb` (size/aspect-ratio anomaly,
+- Whether a QA flag from `notebooks/qa_checks.ipynb` (size/aspect-ratio anomaly,
   land-cover flag, boundary overlap) is a real data problem or an expected
   edge case for that specific provider/field.
 - Whether a delivery missing tillage/protection/input data (because this
@@ -248,7 +251,7 @@ reimplementing event-grouping in this repo.
   column) as an alternative to per-operation-type files.
 - No cross-season/cross-year consistency checks (e.g. a field flip-flopping
   between `Abandoned` and a real crop across years, or the same `Geom_id`
-  showing inconsistent attributes over time) — `geometric_checks.ipynb` only
+  showing inconsistent attributes over time) — `notebooks/qa_checks.ipynb` only
   checks a single snapshot, never a field's history across years.
 - No guard against non-numeric year folders silently producing `year=None`.
 - No exclusion filter for anomaly-flagged files (`*_anomalies.geojson`)
