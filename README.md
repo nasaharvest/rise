@@ -15,13 +15,6 @@ Two notebooks, run in order:
    geometry, land-cover, road-proximity, and overlap QA checks on it before you
    trust the data enough to hand it off.
 
-`notebooks/qa_checks_halo.ipynb` is a variant of the same QA notebook pointed
-at a different input (HALO's Ukraine minefield survey polygons instead of
-`check_file.geojson`) — same checks, different source data. It predates the
-bug fixes made to `qa_checks.ipynb` (missing `shapely` import, undefined
-`utm_crs`/`road_union`, fragile raw-Overpass road fetch) and hasn't had them
-backported yet.
-
 ## Environment Setup
 
 ```bash
@@ -36,7 +29,7 @@ it's the one both notebooks in this repo use.)
 
 - `notebooks/`
   - `preprocess_data.ipynb` — the standardization pipeline.
-  - `qa_checks.ipynb` / `qa_checks_halo.ipynb` — QA checks.
+  - `qa_checks.ipynb` — QA checks.
 - `src/rdm/` — shared logic imported by the notebooks (add `src/` to
   `sys.path` before importing, as the notebooks already do):
   - `read_data.py` — reads/merges a raw geometry file with an optional
