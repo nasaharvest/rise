@@ -100,6 +100,38 @@ def assign_season_id(gdf: gpd.GeoDataFrame):
 #    return gdf
 
 
+def collapse_start_end_dates(df: pd.DataFrame, pairs: dict) -> pd.DataFrame:
+    """
+    Collapse a start/end date column pair into a single raw date column.
+
+    Some providers (e.g. FRENDT, Kernel_EBRD) report a start and end date for the
+    same operation instead of one single date. Confirmed from ukrop's ingestion
+    code: it only ever reads one plainly-named date column per operation and has
+    no end-date field in its schema at all, so a start/end pair sent as-is would
+    just be silently ignored. Which date to keep once collapsed is NOT an ukrop
+    requirement, just a convention inherited from prior work here (keeping the
+    END date, matching the Kernel_EBRD 2025 notebook's own choice) - confirm it's
+    the right choice for your use case rather than assuming it's mandated.
+
+    Parameters:
+        df : Input dataframe
+        pairs : {target_col: (start_col, end_col)}, e.g.
+            {"Sowing": ("Sow_Start_Date", "Sow_End_Date")}
+            The target_col is meant to feed straight into convert_multiple_datetime
+            (or already be a usable date column, if it's already datetime-typed).
+
+    Returns:
+        Dataframe with each target_col added, holding a copy of the corresponding
+        end_col. The original start_col/end_col are left untouched.
+    """
+    for target_col, (start_col, end_col) in pairs.items():
+        missing = [c for c in (start_col, end_col) if c not in df.columns]
+        if missing:
+            raise ValueError(f"Missing {missing} for collapsing into '{target_col}'")
+        df[target_col] = df[end_col]
+    return df
+
+
 def to_datetime(string:str,date_format:str):
 
     """

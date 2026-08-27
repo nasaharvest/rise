@@ -58,14 +58,20 @@ the filename itself** (not the extension), against real conventions like
 - input/protect (→ ChemicalOperation): `Input_*`/`Protect_*`-prefixed `Date`, `Year/Month/Day`, `Type`, `Variety`, `Rate`/`_Unit`, `Amount`/`_Unit`, plus `Field`, `Machine_Tasks`, `Implements`, `Row_Spacing`, `Depth`, `Speed`
 - crops: `Season_id`, `Geom_id`, `Crop`, `Crop_Group`, `Crop_Season`, `Crop_Variation`
 
-**Only the plain date column is ever read — never `_End_Date`.** This is the
-single most important correctness rule in this whole contract: if a raw file
-still has both `Sow_Date`/`Sow_End_Date` (or `Harvest_`/`Tillage_` equivalents)
-unresolved side by side, ukrop will silently ingest the **start** date as if
-it were the intended one. **Every delivery must have start/end date pairs
-collapsed to one column before it's considered ukrop-ready** — this is not a
-style preference. The established convention (used for `frendt_2024` and
-`kernel_ebrd` earlier) is: drop the start-date fields, rename the end-date
+**Confirmed from ukrop's code:** it only ever reads one plainly-named date
+column per operation (`Sow_Date`, `Harvest_Date`, `Tillage_Date`) — its
+database schema has no end-date field at all. If a raw file still has both a
+plain-named column and a separate `_End_Date` column unresolved side by side
+(as real FRENDT files do — `Sow_Date` holds the start value there, with
+`Sow_End_Date` as the extra column), ukrop will read whatever the plain-named
+column happens to hold, which may not be the value you intended. **Every
+delivery needs its date columns collapsed to one plain-named column before
+it's ukrop-ready** — this part is not optional.
+
+**Not confirmed — a convention, not an ukrop requirement:** which of the two
+dates (start or end) should end up in that plain column. The convention used
+so far (`frendt_2024`, `kernel_ebrd`, and the Kernel_EBRD 2025 notebook) is to
+keep the **end** date, drop the start-date fields, and rename the end-date
 fields to the plain name (`Sow_End_Date` → `Sow_Date`, etc.).
 
 **Year comes from the file's immediate parent folder name**, via a plain
