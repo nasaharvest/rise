@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rise"
+version = "0.1.0"
+description = "RISE geospatial processing components"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+rdm = [
+    "geopandas",
+    "shapely",
+    "pyproj",
+    "pyogrio",
+    "pyarrow",
+    "pandas",
+    "numpy",
+    "xarray",
+    "matplotlib",
+    "openpyxl",
+    "ipykernel",
+    "ipywidgets",
+    "osmnx",
+    "rasterio",
+    "rasterstats",
+    "planetary-computer",
+    "pystac-client",
+    "s2cell",
+]
+satellite = [
+    "fsd[local,azure,aml,mpc,grid] @ git+https://github.com/nikhilsrajan/fsd@v0.1.0",
+    "scikit-learn",
+    "joblib",
+]
+
+[tool.setuptools.packages.find]
+where = ["rdm/src"]
+include = ["rdm*"]
