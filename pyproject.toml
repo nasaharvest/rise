@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "rise"
 version = "0.1.0"
 description = "RISE geospatial processing components"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = []
 
 [project.optional-dependencies]
@@ -31,11 +31,17 @@ rdm = [
     "s2cell",
 ]
 satellite = [
-    "fsd[local,azure,aml,mpc,grid] @ git+https://github.com/nikhilsrajan/fsd@v0.1.0",
+    "rise-eo[local,azure,aml,mpc,grid] @ git+https://github.com/nikhilsrajan/fsd@v0.3.0",
     "scikit-learn",
     "joblib",
 ]
 
-[tool.setuptools.packages.find]
-where = ["rdm/src"]
-include = ["rdm*"]
+[project.scripts]
+rise = "rise_cli:main"
+
+[tool.setuptools]
+packages = ["rdm", "rise_cli"]
+
+[tool.setuptools.package-dir]
+rdm = "rdm/src/rdm"
+rise_cli = "src/rise_cli"

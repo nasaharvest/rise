@@ -3,11 +3,11 @@ ipykernel
 
 ## Training and inference pipeline dependencies
 
-# fsd — the pipeline itself.
+# rise-eo — the pipeline itself.
 #   azure = abfss:// blob I/O   aml = dispatch jobs to the cluster
 #   mpc   = Planetary Computer  grid = ROI → grid-cell tiling
-fsd[local,azure,aml,mpc,grid] @ git+https://github.com/nikhilsrajan/fsd@v0.1.0
+rise-eo[local,azure,aml,mpc,grid] @ git+https://github.com/nikhilsrajan/fsd@v0.3.0
 
-# YOUR model's stack. fsd deliberately does not train models, so these are yours, not its.
+# YOUR model's stack. rise-eo deliberately does not train models, so these are yours, not its.
 scikit-learn
 joblib

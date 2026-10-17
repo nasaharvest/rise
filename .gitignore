@@ -121,6 +121,8 @@ notebooks/*
 !notebooks/shapefiles/
 !notebooks/build_images.ipynb
 !notebooks/e2e_austria_aml.ipynb
+!notebooks/e2e_austria_aml_s1.ipynb
 !notebooks/demo_model/
 notebooks/demo_model/*
 !notebooks/demo_model/my_adapter.py
+!notebooks/demo_model/my_adapter_s1.py
