@@ -31,7 +31,7 @@ rdm = [
     "s2cell",
 ]
 satellite = [
-    "rise-eo[local,azure,aml,mpc,grid] @ git+https://github.com/nikhilsrajan/fsd@v0.3.0",
+    "rise-eo[local,azure,aml,mpc,grid] @ git+https://github.com/nasaharvest/rise-eo@v0.3.0",
     "scikit-learn",
     "joblib",
 ]
