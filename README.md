@@ -5,7 +5,7 @@ RISE (Rapid Intelligence System for the Environment) is installable as a single 
 | Component | Where it comes from | How you use it |
 |-----------|--------------------|----------------|
 | **RDM** (Reference Data Management) | Bundled in this repository (`rdm/`) and installed with RISE | `import rdm` |
-| **rise-eo** (Earth observation: imagery → datacubes → training data → inference; formerly `fsd`) | Its own repository, [github.com/nasaharvest/rise-eo](https://github.com/nasaharvest/rise-eo), installed automatically with RISE (pinned to `v0.3.0`) | `import rise_eo`, command `rise-eo` |
+| **rise-eo** (Earth observation: imagery → datacubes → training data → inference) | Its own repository, [github.com/nasaharvest/rise-eo](https://github.com/nasaharvest/rise-eo), installed automatically with RISE (pinned to `v0.3.0`) | `import rise_eo`, command `rise-eo` |
 
 How the components are named and how they fit together: [docs/components.md](docs/components.md).
 
@@ -56,15 +56,6 @@ rise --help        # lists the installed components, e.g. "eo"
 | `rise init` | Runs `rise-<role> init` for each installed component that ships a command. Today that is `rise-eo init`, which writes your Azure settings to `~/.config/rise-eo/config.toml`. |
 | `rise <role> …` | Passes through to `rise-<role> …`. For example, `rise eo config` runs `rise-eo config`. |
 
-### Upgrading from fsd (RISE with `fsd` v0.1/v0.2)
-
-fsd was renamed to rise-eo in v0.3.0, with no compatibility layer:
-
-- `import fsd` → `import rise_eo`; the command `fsd` → `rise-eo`; environment variables `FSD_*` → `RISE_EO_*`.
-- Your config moves from `~/.config/fsd/config.toml` to `~/.config/rise-eo/config.toml`. rise-eo does not read the old file. If it finds one, its error prints the command that moves it.
-- A model bundle saved with fsd ≤ v0.2 whose adapter imports `fsd` does not load. The error names the file under `code/` to edit (`fsd` → `rise_eo`). Then save the bundle again.
-- The Azure ML images are now `rise-eo-aml-env` and `rise-eo-infer-sklearn`. `notebooks/build_images.ipynb` builds them.
-
 ### Troubleshooting
 
 - **Geospatial libraries fail to build** (GDAL, rasterio, geopandas; most common on Windows): install them from conda-forge first, then rerun the pip command.
@@ -73,6 +64,7 @@ fsd was renamed to rise-eo in v0.3.0, with no compatibility layer:
   ```
 - **`ERROR: Package 'rise-eo' requires a different Python: 3.10.x not in '>=3.11'`:** your environment's Python is too old. Create a new one with `conda create -n rise python=3.11`, activate it, and install again. Check your version with `python --version`.
 - **Errors mentioning `git` while installing rise-eo:** make sure Git is installed and available on your `PATH`.
+- **`import rise_eo` fails, or `pip show rise-eo` says `Package(s) not found`:** RISE was installed without the `satellite` extra. rise-eo comes only with that extra, so a plain `pip install -e .` installs RISE alone. Run `pip install -e ".[rdm,satellite]"` again.
 
 ### Not covered by the install
 

@@ -14,7 +14,7 @@
 - A deployed service, such as `ukrop`, is not a component: RISE links to it and never installs it.
 
 Current state: RDM still lives in `rdm/` (moving to `nasaharvest/rise-rdm` later). rise-eo lives at
-`github.com/nasaharvest/rise-eo` (formerly `github.com/nikhilsrajan/fsd`, which redirects).
+`github.com/nasaharvest/rise-eo`.
 
 ## Names
 
