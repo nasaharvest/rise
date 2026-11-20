@@ -24,7 +24,4 @@ cfg = rise_eo.config.load()      # explicit -- rise-eo's own code never reads th
 
 `rise eo config` (or `rise-eo config`) prints the resolved value of each key and which of the three sources it came
 from -- useful the moment a stale shell export silently outranks the file. Environment variables are named
-`RISE_EO_*` (formerly `FSD_*`).
-
-**Upgrading from fsd:** rise-eo does not read `~/.config/fsd/config.toml`. If that file exists and the new one does
-not, rise-eo's error prints the command that moves it.
+`RISE_EO_*`.

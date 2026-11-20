@@ -1,7 +1,7 @@
 # Installing RISE components
 
 This repository installs as the Python distribution `rise`. It provides the RDM package (`import rdm`) and the `rise`
-command (`src/rise_cli/`). rise-eo (formerly fsd) is an external component used by the satellite notebooks; the
+command (`src/rise_cli/`). rise-eo is an external component used by the satellite notebooks; the
 `satellite` extra installs it from its own Git repository, pinned to a tag. How the components fit together:
 [components.md](components.md).
 
