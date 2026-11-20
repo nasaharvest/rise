@@ -42,6 +42,6 @@ the package does not configure those services.
 and Python import names do not have to match. The `rise` script runs `rise_cli:main`. The notebook files and sample
 datasets are repository assets, not installed Python modules.
 
-The `satellite` extra pins rise-eo to an exact tag (`rise-eo[…] @ git+https://github.com/nikhilsrajan/fsd@v0.3.0`).
+The `satellite` extra pins rise-eo to an exact tag (`rise-eo[…] @ git+https://github.com/nasaharvest/rise-eo@v0.3.0`).
 To move to a new rise-eo release, change the tag here and in `requirements.txt`, and the `rise_eo=` reference in the
 two `ImageDefinition`s in `notebooks/build_images.ipynb` and the e2e notebooks.

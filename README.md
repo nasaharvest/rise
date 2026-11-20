@@ -5,7 +5,7 @@ RISE (Rapid Intelligence System for the Environment) is installable as a single 
 | Component | Where it comes from | How you use it |
 |-----------|--------------------|----------------|
 | **RDM** (Reference Data Management) | Bundled in this repository (`rdm/`) and installed with RISE | `import rdm` |
-| **rise-eo** (Earth observation: imagery → datacubes → training data → inference; formerly `fsd`) | Its own repository, [github.com/nikhilsrajan/fsd](https://github.com/nikhilsrajan/fsd), installed automatically with RISE (pinned to `v0.3.0`) | `import rise_eo`, command `rise-eo` |
+| **rise-eo** (Earth observation: imagery → datacubes → training data → inference; formerly `fsd`) | Its own repository, [github.com/nasaharvest/rise-eo](https://github.com/nasaharvest/rise-eo), installed automatically with RISE (pinned to `v0.3.0`) | `import rise_eo`, command `rise-eo` |
 
 How the components are named and how they fit together: [docs/components.md](docs/components.md).
 
